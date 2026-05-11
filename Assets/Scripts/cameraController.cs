@@ -2,26 +2,31 @@ using UnityEngine;
 
 public class cameraController : MonoBehaviour
 {
-
     public Transform playerTransform;
-    public Vector3 offset;
 
+    // distância da câmera
+    public float offsetX = 2f;
+
+    // posição fixa da câmera
+    private float fixedY;
+    private float fixedZ;
+
+    void Start()
+    {
+        // guarda posição inicial da câmera
+        fixedY = transform.position.y;
+        fixedZ = transform.position.z;
+    }
 
     void LateUpdate()
     {
         if (playerTransform != null)
         {
-            transform.position = playerTransform.position + offset;
-
-            if (playerTransform.localScale.x > 0)
-            {
-                transform.localScale = new Vector3(1f, 1f, 1f);
-            }
-            else
-            {
-                transform.localScale = new Vector3(-1f,1f, 1f);
-            }
+            transform.position = new Vector3(
+                playerTransform.position.x + offsetX,
+                fixedY,
+                fixedZ
+            );
         }
-
     }
 }
