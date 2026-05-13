@@ -1,5 +1,6 @@
+using System.Collections;
 using UnityEngine;
-
+using UnityEngine.SceneManagement;
 public class PlayerMovimento : MonoBehaviour
 {
    
@@ -13,13 +14,15 @@ public class PlayerMovimento : MonoBehaviour
     private Animator animator;
     private bool isRunning = false;
     private bool isJumping =false;
-
+    public int playerHealth = 100;
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
         animator.SetBool("isRunning", false);
         animator.SetBool("isJumping", false);
+        animator.SetBool("inDamage", false);
+        Debug.Log("Life do Player: " + playerHealth);
     }
 
     void Update()
@@ -29,6 +32,7 @@ public class PlayerMovimento : MonoBehaviour
         if (moveInput != 0 )
         {
             isRunning = true;
+            animator.SetBool("isJumping", false);
         }else
         {
             isRunning=false;
@@ -40,6 +44,11 @@ public class PlayerMovimento : MonoBehaviour
         {
             Jump();
         }
+        if (Input.GetButtonDown("Fire1"))
+        {
+            animator.SetTrigger("Attack");
+        }
+        
     }
 
     void FixedUpdate()
@@ -53,7 +62,7 @@ public class PlayerMovimento : MonoBehaviour
             {
             transform.localScale = new Vector3(-1f, 1f, 1f);
         }
-        if(Mathf.Abs(rb.velocity.y) > 0.01f)
+        if(Mathf.Abs(rb.linearVelocity.y) > 0.01f)
         {
             isJumping = true;
             animator.SetBool("isJumping", true);
@@ -70,9 +79,31 @@ public class PlayerMovimento : MonoBehaviour
         RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 1.0f);
         if(hit.collider != null)
         {
-            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
             animator.SetBool("isJumping", true);
         }
     }
+
+    public void TakeDamage(int damage)
+    {
+        playerHealth -= damage;
+        animator.SetBool("inDamage", true);
+        Debug.Log("Player tomou" + damage + " de dano. Saúde restante: " + playerHealth);
+
+        StartCoroutine(ResetDamageAnimation());
+
+        if(playerHealth <= 0)
+        {
+
+            Debug.Log("Player Morreu!");
+            SceneManager.LoadScene(1);
+        }
+    }
+    private IEnumerator ResetDamageAnimation()
+    {
+        yield return new WaitForSeconds(1f);
+        animator.SetBool("inDamage", false);
+    }
+
 }
 

@@ -1,5 +1,7 @@
+using System.Collections;
 using UnityEditor.Tilemaps;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class EnemyController : MonoBehaviour
 {
@@ -9,10 +11,17 @@ public class EnemyController : MonoBehaviour
     public float movementSpeed = 2f;
     private Animator animator;
     private bool isWalking = false;
+    public int enemyHealth = 50;
+    public float attackInterval = 1f;
+
+
 
     private Transform currentTarget;
     private Rigidbody2D rb;
     private Vector3 scale;
+    private Coroutine attackCoroutine;
+    public float fadeDuration = 1f;
+    private SpriteRenderer spriteRenderer;
 
     void Start()
     {
@@ -20,11 +29,80 @@ public class EnemyController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         currentTarget = waypoinA;
         scale = transform.localScale;
+        Debug.Log("Life do Enemy: " + enemyHealth);
+        spriteRenderer = GetComponent<SpriteRenderer>();
     }
 
-       void Update()
+    void Update()
     {
         MoveTowardsTarget();
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("ZoneAttack"))
+        {
+            Debug.Log("Player entrou na zona");
+        }
+
+        PlayerMovimento player = other.GetComponent<PlayerMovimento>();
+
+        if (player == null)
+        {
+
+            player = other.GetComponentInParent<PlayerMovimento>();
+
+
+        }
+
+        if (player != null)
+        {
+            if (attackCoroutine == null)
+            {
+                attackCoroutine = StartCoroutine(AttackPlayer(player));
+            }
+        }
+        else
+        {
+            Debug.LogWarning("Player Controller nao encontrado no objeto com tag ZoneAttack");
+        }
+
+        if (other.CompareTag("AttackZone"))
+        {
+            Debug.Log("O inimigo está sendo atacado");
+            EnemyTakeDamage(10);
+        }
+
+
+    }
+
+
+
+
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        if (other.CompareTag("ZoneAttack"))
+        {
+            Debug.Log("Inimigo saiu da zona de ataque");
+
+            if (attackCoroutine != null)
+            {
+                StopCoroutine(attackCoroutine); attackCoroutine = null;
+                animator.SetBool("Attack", false);
+            }
+        }
+    }
+
+    private IEnumerator AttackPlayer(PlayerMovimento player)
+    {
+        while (true)
+        {
+            player.TakeDamage(10); //valor pode ser alterado conforme sua necessidade.
+            animator.SetTrigger("Attack");
+            Debug.Log("Inimigo atacando...");
+
+            yield return new WaitForSeconds(attackInterval);
+        }
     }
 
     private void MoveTowardsTarget()
@@ -42,7 +120,7 @@ public class EnemyController : MonoBehaviour
 
         UpdateAnimation();
     }
-    
+
     private void SwitchTarget()
     {
         if (currentTarget == waypoinA)
@@ -52,7 +130,7 @@ public class EnemyController : MonoBehaviour
         }
         else
         {
-            currentTarget=waypoinA;
+            currentTarget = waypoinA;
             transform.localScale = scale;
         }
     }
@@ -69,4 +147,46 @@ public class EnemyController : MonoBehaviour
         flippedScale.x *= -1;
         transform.localScale = flippedScale;
     }
+
+    public void EnemyTakeDamage(int damage)
+    {
+        enemyHealth -= damage;
+        animator.SetBool("inDamage", true);
+        Debug.Log("inimigo tomou " + damage + "de dano. Sáude restante: " + enemyHealth);
+
+        StartCoroutine(ResetDamageAnimation());
+
+        if (enemyHealth <= 0)
+        {
+
+            Debug.Log("Enemy Morreu!");
+            Destroy(gameObject);
+            StartCoroutine(FadeOutAndDestroy());
+        }
+    }
+
+
+    private IEnumerator ResetDamageAnimation()
+    {
+        yield return new WaitForSeconds(1f);
+        animator.SetBool("inDamage", false);
+    }
+
+    private IEnumerator FadeOutAndDestroy()
+    {
+        float startAlpha = spriteRenderer.color.a;
+        float rate = 1.0f / fadeDuration;
+        float progress = 0.0f;
+
+        while (progress < 1.0f)
+        {
+            Color tmpColor = spriteRenderer.color;
+            spriteRenderer.color = new Color(tmpColor.r, tmpColor.g, tmpColor.b, Mathf.Lerp(startAlpha, 0, progress));
+            progress += rate * Time.deltaTime;
+
+            yield return null;
+        }
+        Destroy(gameObject);
+    }
+
 }
