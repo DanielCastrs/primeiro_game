@@ -44,6 +44,7 @@ public class EnemyController : MonoBehaviour
         {
             Debug.Log("Player entrou na zona");
         }
+        
 
         PlayerMovimento player = other.GetComponent<PlayerMovimento>();
 

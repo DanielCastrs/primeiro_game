@@ -1,6 +1,8 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+
 public class PlayerMovimento : MonoBehaviour
 {
    
@@ -14,7 +16,9 @@ public class PlayerMovimento : MonoBehaviour
     private Animator animator;
     private bool isRunning = false;
     private bool isJumping =false;
-    public int playerHealth = 100;
+    public float playerHealth = 100;
+
+    public Slider lifeSlider;
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -22,6 +26,7 @@ public class PlayerMovimento : MonoBehaviour
         animator.SetBool("isRunning", false);
         animator.SetBool("isJumping", false);
         animator.SetBool("inDamage", false);
+        
         Debug.Log("Life do Player: " + playerHealth);
     }
 
@@ -48,6 +53,8 @@ public class PlayerMovimento : MonoBehaviour
         {
             animator.SetTrigger("Attack");
         }
+
+        lifeSlider.value = (playerHealth * 0.01f);
         
     }
 
@@ -103,6 +110,7 @@ public class PlayerMovimento : MonoBehaviour
     {
         yield return new WaitForSeconds(1f);
         animator.SetBool("inDamage", false);
+        
     }
 
 }
