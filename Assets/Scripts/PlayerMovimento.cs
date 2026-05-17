@@ -103,7 +103,7 @@ public class PlayerMovimento : MonoBehaviour
         {
 
             Debug.Log("Player Morreu!");
-            SceneManager.LoadScene(1);
+            SceneManager.LoadScene(2);
         }
     }
     private IEnumerator ResetDamageAnimation()
